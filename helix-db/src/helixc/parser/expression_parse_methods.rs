@@ -444,27 +444,35 @@ impl HelixParser {
                             data = Some(VectorData::Vector(self.parse_vec_literal(p)?));
                         }
                         Rule::embed_method => {
-                            let loc = vector_data.loc();
-                            let inner = vector_data.try_inner_next()?;
+                            let embed_args = vector_data.clone().into_inner().next();
+                            let mut arg_values = Vec::new();
+
+                            if let Some(args_pair) = embed_args {
+                                for arg in args_pair.into_inner() {
+                                    match arg.as_rule() {
+                                        Rule::identifier => {
+                                            arg_values.push(arg.as_str().to_string())
+                                        }
+                                        Rule::string_literal => {
+                                            arg_values.push(arg.as_str().to_string())
+                                        }
+                                        _ => {
+                                            return Err(ParserError::from(format!(
+                                                "Unexpected rule in Embed arguments: {:?} => {:?}",
+                                                arg.as_rule(),
+                                                arg,
+                                            )));
+                                        }
+                                    }
+                                }
+                            }
+
                             data = Some(VectorData::Embed(Embed {
-                                loc,
-                                value: match inner.as_rule() {
-                                    Rule::identifier => {
-                                        EvaluatesToString::Identifier(inner.as_str().to_string())
-                                    }
-                                    Rule::string_literal => {
-                                        EvaluatesToString::StringLiteral(inner.as_str().to_string())
-                                    }
-                                    _ => {
-                                        return Err(ParserError::from(format!(
-                                            "Unexpected rule in SearchV: {:?} => {:?}",
-                                            inner.as_rule(),
-                                            inner,
-                                        )));
-                                    }
-                                },
+                                loc: vector_data.loc(),
+                                value: EvaluatesToString::Arguments(arg_values),
                             }));
                         }
+
                         _ => {
                             return Err(ParserError::from(format!(
                                 "Unexpected rule in SearchV: {:?} => {:?}",

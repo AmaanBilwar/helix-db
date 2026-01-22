@@ -26,25 +26,54 @@ impl HelixParser {
                         Rule::vec_literal => {
                             data = Some(VectorData::Vector(self.parse_vec_literal(p)?));
                         }
+                        // Rule::embed_method => {
+                        //     let inner = vector_data.clone().try_inner_next()?;
+                        //     data = Some(VectorData::Embed(Embed {
+                        //         loc: vector_data.loc(),
+                        //         value: match inner.as_rule() {
+                        //             Rule::identifier => {
+                        //                 EvaluatesToString::Identifier(inner.as_str().to_string())
+                        //             }
+                        //             Rule::string_literal => {
+                        //                 EvaluatesToString::StringLiteral(inner.as_str().to_string())
+                        //             }
+                        //             _ => {
+                        //                 return Err(ParserError::from(format!(
+                        //                     "Unexpected rule in SearchV: {:?} => {:?}",
+                        //                     inner.as_rule(),
+                        //                     inner,
+                        //                 )));
+                        //             }
+                        //         },
+                        //     }));
+                        // }
                         Rule::embed_method => {
-                            let inner = vector_data.clone().try_inner_next()?;
+                            let embed_args = vector_data.clone().into_inner().next();
+                            let mut arg_values = Vec::new();
+
+                            if let Some(args_pair) = embed_args {
+                                for arg in args_pair.into_inner() {
+                                    match arg.as_rule() {
+                                        Rule::identifier => {
+                                            arg_values.push(arg.as_str().to_string())
+                                        }
+                                        Rule::string_literal => {
+                                            arg_values.push(arg.as_str().to_string())
+                                        }
+                                        _ => {
+                                            return Err(ParserError::from(format!(
+                                                "Unexpected rule in Embed arguments: {:?} => {:?}",
+                                                arg.as_rule(),
+                                                arg,
+                                            )));
+                                        }
+                                    }
+                                }
+                            }
+
                             data = Some(VectorData::Embed(Embed {
                                 loc: vector_data.loc(),
-                                value: match inner.as_rule() {
-                                    Rule::identifier => {
-                                        EvaluatesToString::Identifier(inner.as_str().to_string())
-                                    }
-                                    Rule::string_literal => {
-                                        EvaluatesToString::StringLiteral(inner.as_str().to_string())
-                                    }
-                                    _ => {
-                                        return Err(ParserError::from(format!(
-                                            "Unexpected rule in SearchV: {:?} => {:?}",
-                                            inner.as_rule(),
-                                            inner,
-                                        )));
-                                    }
-                                },
+                                value: EvaluatesToString::Arguments(arg_values),
                             }));
                         }
                         _ => {
@@ -148,7 +177,6 @@ impl HelixParser {
             loc: pair.loc(),
         })
     }
-
 }
 
 #[cfg(test)]
@@ -335,6 +363,21 @@ mod tests {
 
             QUERY addDoc() =>
                 doc <- AddV<Document>(Embed("hello world"), {content: "hello world"})
+                RETURN doc
+        "#;
+
+        let content = write_to_temp_file(vec![source]);
+        let result = HelixParser::parse_source(&content);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_parse_add_vector_with_multiple_embed_params() {
+        let source = r#"
+            V::Document { content: String, embedding: [F32] }
+
+            QUERY addDoc(text: String, context: String) =>
+                doc <- AddV<Document>(Embed(text, context, "additional info"), {content: text})
                 RETURN doc
         "#;
 
