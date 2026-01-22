@@ -1080,6 +1080,14 @@ pub(crate) fn infer_expr_type<'a>(
                                     data: GeneratedValue::Literal(GenRef::Ref(s.clone())),
                                     model_name: gen_query.embedding_model_to_use.clone(),
                                 },
+                                EvaluatesToString::Arguments(args) => {
+                                    // For multiple arguments, concatenate them
+                                    let concatenated = args.join(" ");
+                                    EmbedData {
+                                        data: GeneratedValue::Literal(GenRef::Ref(concatenated)),
+                                        model_name: gen_query.embedding_model_to_use.clone(),
+                                    }
+                                }
                             };
 
                             VecData::Hoisted(gen_query.add_hoisted_embed(embed_data))
@@ -1171,6 +1179,14 @@ pub(crate) fn infer_expr_type<'a>(
                 }
                 Some(VectorData::Embed(e)) => {
                     let embed_data = match &e.value {
+                        EvaluatesToString::Arguments(args) => {
+                            // For multiple arguments, concatenate them
+                            let concatenated = args.join(" ");
+                            EmbedData {
+                                data: GeneratedValue::Literal(GenRef::Ref(concatenated)),
+                                model_name: gen_query.embedding_model_to_use.clone(),
+                            }
+                        }
                         EvaluatesToString::Identifier(i) => {
                             type_in_scope(ctx, original_query, sv.loc.clone(), scope, i.as_str());
                             EmbedData {

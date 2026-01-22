@@ -544,6 +544,14 @@ pub(crate) fn validate_traversal<'a>(
                             data: GeneratedValue::Literal(GenRef::Ref(s.clone())),
                             model_name: gen_query.embedding_model_to_use.clone(),
                         },
+                        EvaluatesToString::Arguments(args) => {
+                            // For multiple arguments, concatenate them
+                            let concatenated = args.join(" ");
+                            EmbedData {
+                                data: GeneratedValue::Literal(GenRef::Ref(concatenated)),
+                                model_name: gen_query.embedding_model_to_use.clone(),
+                            }
+                        }
                     };
 
                     VecData::Hoisted(gen_query.add_hoisted_embed(embed_data))
@@ -2282,6 +2290,14 @@ pub(crate) fn validate_traversal<'a>(
                                 data: GeneratedValue::Literal(GenRef::Ref(s.clone())),
                                 model_name: gen_query.embedding_model_to_use.clone(),
                             },
+                            EvaluatesToString::Arguments(args) => {
+                                // For multiple arguments, concatenate them
+                                let concatenated = args.join(" ");
+                                EmbedData {
+                                    data: GeneratedValue::Literal(GenRef::Ref(concatenated)),
+                                    model_name: gen_query.embedding_model_to_use.clone(),
+                                }
+                            }
                         };
                         Some(VecData::Hoisted(gen_query.add_hoisted_embed(embed_data)))
                     }

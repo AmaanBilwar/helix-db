@@ -683,6 +683,14 @@ pub(crate) fn apply_graph_step<'a>(
                             data: GeneratedValue::Literal(GenRef::Ref(s.clone())),
                             model_name: gen_query.embedding_model_to_use.clone(),
                         },
+                        EvaluatesToString::Arguments(args) => {
+                            // For multiple arguments, concatenate them
+                            let concatenated = args.join(" ");
+                            EmbedData {
+                                data: GeneratedValue::Literal(GenRef::Ref(concatenated)),
+                                model_name: gen_query.embedding_model_to_use.clone(),
+                            }
+                        }
                     };
                     let name = gen_query.add_hoisted_embed(embed_data);
 
