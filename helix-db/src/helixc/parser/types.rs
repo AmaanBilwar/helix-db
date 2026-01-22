@@ -963,6 +963,7 @@ pub struct Embed {
 pub enum EvaluatesToString {
     Identifier(String),
     StringLiteral(String),
+    Arguments(Vec<String>), // new variant for multiple parameters
 }
 
 #[derive(Debug, Clone)]
@@ -1027,7 +1028,6 @@ pub struct AddEdge {
     pub connection: EdgeConnection,
     pub from_identifier: bool,
 }
-
 
 #[derive(Debug, Clone)]
 pub struct EdgeConnection {
