@@ -209,15 +209,9 @@ impl HelixParser {
                                             arg_values.push(arg.as_str().to_string())
                                         }
                                         Rule::string_literal => {
-                                            arg_values.push(arg.as_str().to_string())
+                                            arg_values.push(self.parse_string_literal(arg)?)
                                         }
-                                        _ => {
-                                            return Err(ParserError::from(format!(
-                                                "Unexpected rule in Embed arguments: {:?} => {:?}",
-                                                arg.as_rule(),
-                                                arg,
-                                            )));
-                                        }
+                                        _ => {} // Skip commas
                                     }
                                 }
                             }
