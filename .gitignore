@@ -12,3 +12,4 @@ claude.md
 .cargo/
 **/dist
 **/node_modules
+config.bat
